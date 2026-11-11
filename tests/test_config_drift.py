@@ -110,7 +110,7 @@ def test_missing_ruff_file_is_reported_once(tmp_path):
     problems = find_drift(str(tmp_path))
 
     assert [problem.render() for problem in problems] == [
-        'ruff.toml: missing; run format-hooks sync-config',
+        'ruff.toml: missing; run: pre-commit run sync-config --hook-stage manual',
     ]
 
 
@@ -121,7 +121,8 @@ def test_unparseable_ruff_file_is_reported_once(tmp_path):
     problems = find_drift(str(tmp_path))
 
     assert [problem.render() for problem in problems] == [
-        'ruff.toml: not valid TOML; fix it by hand, then run format-hooks sync-config',
+        'ruff.toml: not valid TOML; fix it by hand, then run: '
+        'pre-commit run sync-config --hook-stage manual',
     ]
 
 
@@ -140,10 +141,10 @@ def test_every_missing_file_is_named_in_an_empty_repository(tmp_path):
     problems = find_drift(str(tmp_path))
 
     assert [problem.render() for problem in problems] == [
-        'ruff.toml: missing; run format-hooks sync-config',
-        '.clang-format: missing; run format-hooks sync-config',
-        '.prettierrc.json: missing; run format-hooks sync-config',
-        '.editorconfig: missing; run format-hooks sync-config',
+        'ruff.toml: missing; run: pre-commit run sync-config --hook-stage manual',
+        '.clang-format: missing; run: pre-commit run sync-config --hook-stage manual',
+        '.prettierrc.json: missing; run: pre-commit run sync-config --hook-stage manual',
+        '.editorconfig: missing; run: pre-commit run sync-config --hook-stage manual',
     ]
 
 
@@ -440,7 +441,9 @@ def test_config_drift_command_fails_and_names_the_missing_file(tmp_path):
     )
 
     assert result.returncode == 1
-    assert 'ruff.toml: missing; run format-hooks sync-config' in result.stdout
+    assert (
+        'ruff.toml: missing; run: pre-commit run sync-config --hook-stage manual' in result.stdout
+    )
 
 
 def test_config_drift_command_passes_on_shared_copies(tmp_path):

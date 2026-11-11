@@ -88,14 +88,14 @@ repos:
       - id: prettier
       - id: shfmt
       - id: config-drift
+      - id: sync-config
 ```
 
 Then install the hook and write the shared settings files:
 
 ```sh
 pre-commit install
-pip install 'git+https://github.com/fishnos/format-hooks@v0.1.0'
-format-hooks sync-config
+pre-commit run sync-config --hook-stage manual
 pre-commit run --all-files
 ```
 
@@ -145,7 +145,7 @@ The settings live in four files at the repository root:
 | `.prettierrc.json` | Prettier       | 100 columns, single quotes, prose left unwrapped           |
 | `.editorconfig`    | shfmt, editors | Two-space indents for shell scripts                        |
 
-`format-hooks sync-config` writes all four. It replaces the last three
+`pre-commit run sync-config --hook-stage manual` writes all four. It replaces the last three
 outright. In `ruff.toml`, it solely rewrites the shared keys (`line-length`,
 `target-version`, `lint.select`, `format.quote-style`), so a repository retains
 its own `ignore` and `extend-exclude` lists.

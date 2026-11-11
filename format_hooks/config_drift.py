@@ -21,7 +21,8 @@ SHARED_RUFF_KEYS: tuple[tuple[str | None, str], ...] = (
     ('lint', 'select'),
     ('format', 'quote-style'),
 )
-MISSING_MESSAGE = 'missing; run format-hooks sync-config'
+SYNC_COMMAND = 'pre-commit run sync-config --hook-stage manual'
+MISSING_MESSAGE = f'missing; run: {SYNC_COMMAND}'
 MISPLACED_MESSAGE = 'ruff settings live here; move them to ruff.toml'
 
 _ABSENT = object()
@@ -105,7 +106,7 @@ def _find_ruff_drift(repo_root: str) -> list[Problem]:
             Problem(
                 RUFF_FILE_NAME,
                 None,
-                'not valid TOML; fix it by hand, then run format-hooks sync-config',
+                f'not valid TOML; fix it by hand, then run: {SYNC_COMMAND}',
             ),
         ]
 

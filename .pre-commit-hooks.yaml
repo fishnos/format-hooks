@@ -61,3 +61,12 @@
   entry: format-hooks config-drift
   pass_filenames: false
   always_run: true
+
+# Writes the shared settings files; runs only when called with `--hook-stage manual`.
+- id: sync-config
+  name: write shared formatter settings
+  language: python
+  entry: format-hooks sync-config
+  pass_filenames: false
+  always_run: true
+  stages: [manual]
