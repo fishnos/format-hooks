@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "format-hooks"
+version = "0.1.0"
+description = "Shared formatters and comment checks, as pre-commit hooks."
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+test = ["pytest", "ruff==0.15.14"]
+
+[project.scripts]
+format-hooks = "format_hooks.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["format_hooks*"]
+
+[tool.setuptools.package-data]
+format_hooks = ["shared_config/*", "shared_config/.*"]

@@ -1,0 +1,63 @@
+# Each formatter is pinned here, so a repository's `rev:` pins every version at once.
+- id: ruff-check
+  name: ruff check
+  language: python
+  entry: ruff check --fix --force-exclude
+  types_or: [python, pyi]
+  require_serial: true
+  additional_dependencies: [ruff==0.15.14]
+
+- id: ruff-format
+  name: ruff format (one argument per line)
+  language: python
+  entry: format-hooks ruff-format
+  types_or: [python, pyi]
+  require_serial: true
+  additional_dependencies: [ruff==0.15.14]
+
+- id: python-spacing
+  name: python spacing
+  language: python
+  entry: format-hooks python-spacing
+  types: [python]
+
+- id: comment-pronouns
+  name: no personal pronouns in comments
+  language: python
+  entry: format-hooks comment-pronouns
+  types_or: [python, shell, yaml, toml, c, c++, ts, tsx, javascript]
+
+- id: comment-density
+  name: comment density
+  language: python
+  entry: format-hooks comment-density
+  types_or: [python, shell, yaml, toml, c, c++, ts, tsx, javascript]
+
+- id: clang-format
+  name: clang-format
+  language: python
+  entry: clang-format -i --style=file
+  types_or: [c, c++]
+  additional_dependencies: [clang-format==23.1.5]
+
+- id: prettier
+  name: prettier
+  language: node
+  entry: prettier --write --ignore-unknown
+  types_or: [yaml, json, markdown, ts, tsx, javascript]
+  additional_dependencies: [prettier@3.9.10]
+  language_version: 26.13.0
+
+- id: shfmt
+  name: shfmt
+  language: python
+  entry: shfmt --write
+  types: [shell]
+  additional_dependencies: [shfmt-py==4.2.0]
+
+- id: config-drift
+  name: shared formatter settings unchanged
+  language: python
+  entry: format-hooks config-drift
+  pass_filenames: false
+  always_run: true
