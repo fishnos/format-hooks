@@ -125,7 +125,7 @@ flowchart LR
 | `ruff-format`      | Formats Python. A call too long for one line gets one argument per line, in one pass.                                     | Python                                    |     yes     |
 | `python-spacing`   | Puts blank lines before `return`, around blocks and after docstrings; keeps an assignment next to the block that uses it. | Python                                    |     yes     |
 | `comment-pronouns` | Rejects "I", "we", "you" and the like in comments and Python docstrings.                                                  | Python, C, C++, shell, YAML, TOML, JS, TS |     no      |
-| `comment-density`  | Blocks a file of 20 or more lines when more than 20% of them are comments. The header comment does not count.             | Python, C, C++, shell, YAML, TOML, JS, TS |     no      |
+| `comment-density`  | Blocks a file whose comment lines exceed 10% of its lines plus 3, so a short file keeps room for a docstring. The header comment does not count. | Python, C, C++, shell, YAML, TOML, JS, TS |     no      |
 | `clang-format`     | Formats C and C++.                                                                                                        | C, C++                                    |     yes     |
 | `prettier`         | Formats web and config files.                                                                                             | YAML, JSON, Markdown, JS, TS              |     yes     |
 | `shfmt`            | Formats shell scripts.                                                                                                    | shell                                     |     yes     |
@@ -173,11 +173,12 @@ SKIP=comment-pronouns git commit
 ```
 
 **For a whole repository**, the density limits can be loosened in
-`.pre-commit-config.yaml`:
+`.pre-commit-config.yaml`. `--max-share` is the share of lines, `--allowance-lines`
+the fixed lines added on top, and `--min-lines` skips files shorter than that:
 
 ```yaml
 - id: comment-density
-  args: [--max-share=0.3, --min-lines=40]
+  args: [--max-share=0.2, --allowance-lines=5, --min-lines=40]
 ```
 
 ## Running a check by hand

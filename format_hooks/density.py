@@ -1,12 +1,15 @@
 """The `comment-density` rule: the share of a file's lines that are comments.
 
-Comment lines are full-line comments plus docstring lines. The header at the
-top of a file (a shebang and the comment run under it, such as a license) is
-left out of both counts, so a long license does not trip the limit. Only
-reports; never edits a file.
+Comment lines are full-line comments plus docstring lines. A file may hold up to
+a share of its lines as comments plus a fixed allowance, so a short file still
+has room for a module docstring while a long one is held near the share. The
+header at the top of a file (a shebang and the comment run under it, such as a
+license) is left out of both counts, so a long license does not trip the limit.
+Only reports; never edits a file.
 """
 
 import argparse
+import math
 import os
 
 from format_hooks.comments import LANGUAGE_BY_SUFFIX, extract_comments, split_lines
@@ -42,7 +45,17 @@ def measure_comment_share(path: str, source: str) -> tuple[int, int] | None:
     return len(comment_lines & body_lines), len(body_lines)
 
 
-def check_file(path: str, max_share: float, min_lines: int) -> list[Problem]:
+def allowed_comment_lines(line_count: int, max_share: float, allowance_lines: int) -> int:
+    # The epsilon keeps a product such as 0.29 * 100 = 28.999... from rounding down a line.
+    return math.floor(max_share * line_count + allowance_lines + 1e-9)
+
+
+def check_file(
+    path: str,
+    max_share: float,
+    min_lines: int,
+    allowance_lines: int,
+) -> list[Problem]:
     try:
         with open(path, encoding='utf-8') as file:
             source = file.read()
@@ -57,11 +70,16 @@ def check_file(path: str, max_share: float, min_lines: int) -> list[Problem]:
     if line_count == 0 or line_count < min_lines:
         return []
 
-    share = comment_count / line_count
-    if share <= max_share:
+    allowed_count = allowed_comment_lines(line_count, max_share, allowance_lines)
+    if comment_count <= allowed_count:
         return []
 
-    return [Problem(path, None, f'{share:.0%} comment lines, limit {max_share:.0%}')]
+    message = (
+        f'{comment_count} of {line_count} lines are comments, '
+        f'limit {allowed_count} ({max_share:.0%} + {allowance_lines})'
+    )
+
+    return [Problem(path, None, message)]
 
 
 def run(arguments: argparse.Namespace) -> int:
@@ -69,7 +87,12 @@ def run(arguments: argparse.Namespace) -> int:
     problems = [
         problem
         for path in paths
-        for problem in check_file(path, arguments.max_share, arguments.min_lines)
+        for problem in check_file(
+            path,
+            arguments.max_share,
+            arguments.min_lines,
+            arguments.allowance_lines,
+        )
     ]
     for problem in problems:
         print(problem.render())
@@ -79,7 +102,8 @@ def run(arguments: argparse.Namespace) -> int:
 
 def register(subparsers) -> None:
     parser = subparsers.add_parser('comment-density', help='limit the share of comment lines')
-    parser.add_argument('--max-share', type=float, default=0.20)
-    parser.add_argument('--min-lines', type=int, default=20)
+    parser.add_argument('--max-share', type=float, default=0.10)
+    parser.add_argument('--allowance-lines', type=int, default=3)
+    parser.add_argument('--min-lines', type=int, default=0)
     parser.add_argument('paths', nargs='*')
     parser.set_defaults(run=run)

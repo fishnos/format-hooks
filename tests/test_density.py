@@ -59,7 +59,7 @@ def test_density_over_the_limit_fails_the_cli(tmp_path):
     )
 
     assert result.returncode == 1
-    assert f'{source_path}: 24% comment lines, limit 20%' in result.stdout
+    assert f'{source_path}: 6 of 25 lines are comments, limit 5 (10% + 3)' in result.stdout
 
 
 def test_density_under_a_raised_limit_passes_the_cli(tmp_path):
@@ -96,38 +96,70 @@ def test_density_marker_skips_the_file(tmp_path):
     assert result.returncode == 0
 
 
-def test_short_files_are_not_measured(tmp_path):
-    source_path = tmp_path / 'short.py'
-    source_path.write_text(SHORT_DENSE_SOURCE)
-
-    result = subprocess.run(
-        [sys.executable, '-m', 'format_hooks.cli', 'comment-density', str(source_path)],
+def run_density(source_path, *options):
+    return subprocess.run(
+        [sys.executable, '-m', 'format_hooks.cli', 'comment-density', *options, str(source_path)],
         capture_output=True,
         text=True,
     )
+
+
+def test_short_dense_file_is_measured(tmp_path):
+    source_path = tmp_path / 'short.py'
+    source_path.write_text(SHORT_DENSE_SOURCE)
+
+    result = run_density(source_path)
+
+    assert result.returncode == 1
+    assert f'{source_path}: 5 of 11 lines are comments, limit 4 (10% + 3)' in result.stdout
+
+
+def test_one_line_file_that_is_all_docstring_passes(tmp_path):
+    source_path = tmp_path / 'tiny.py'
+    source_path.write_text('"""Holds the package version."""\n')
+
+    result = run_density(source_path)
 
     assert result.returncode == 0
 
 
-def test_short_file_is_measured_under_a_lowered_line_floor(tmp_path):
+def test_small_file_within_the_fixed_allowance_passes(tmp_path):
+    # 20 non-blank lines, 5 comments: 25%, but within 10% of 20 plus 3.
+    source_path = tmp_path / 'small.py'
+    source_path.write_text('value = 1\n' + '# comment\n' * 5 + 'value = 1\n' * 14)
+
+    result = run_density(source_path)
+
+    assert result.returncode == 0
+
+
+def test_large_file_over_ten_percent_plus_the_allowance_fails(tmp_path):
+    # 100 non-blank lines, 14 comments: the limit is 10% of 100 plus 3, so 13.
+    source_path = tmp_path / 'large.py'
+    source_path.write_text('value = 1\n' + '# comment\n' * 14 + 'value = 1\n' * 85)
+
+    result = run_density(source_path)
+
+    assert result.returncode == 1
+    assert f'{source_path}: 14 of 100 lines are comments, limit 13 (10% + 3)' in result.stdout
+
+
+def test_raised_allowance_passes_a_file_over_the_default(tmp_path):
+    source_path = tmp_path / 'dense.py'
+    source_path.write_text(DENSE_SOURCE)
+
+    result = run_density(source_path, '--allowance-lines', '4')
+
+    assert result.returncode == 0
+
+
+def test_file_under_a_raised_line_floor_is_not_measured(tmp_path):
     source_path = tmp_path / 'short.py'
     source_path.write_text(SHORT_DENSE_SOURCE)
 
-    result = subprocess.run(
-        [
-            sys.executable,
-            '-m',
-            'format_hooks.cli',
-            'comment-density',
-            '--min-lines',
-            '10',
-            str(source_path),
-        ],
-        capture_output=True,
-        text=True,
-    )
+    result = run_density(source_path, '--min-lines', '20')
 
-    assert result.returncode == 1
+    assert result.returncode == 0
 
 
 def test_license_header_is_not_counted():

@@ -1,8 +1,7 @@
-"""Which files a rule looks at when run by hand.
+"""Which files a rule checks when run by hand.
 
-Skipping is left to git: without paths, every file git knows about is checked,
-untracked ones included, and anything gitignored is left out. A repository with
-no commits yet still gets checked.
+Without paths, git decides: every file it knows about, untracked ones included,
+gitignored ones left out, even in a repository with no commits yet.
 """
 
 import os
