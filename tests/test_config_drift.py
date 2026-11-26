@@ -523,3 +523,12 @@ def test_sync_config_command_fails_and_names_the_file_holding_ruff_settings(tmp_
 
     assert result.returncode == 1
     assert 'pyproject.toml: ruff settings live here; move them to ruff.toml' in result.stdout
+
+
+def test_shared_settings_files_keep_unix_line_endings_in_a_windows_checkout():
+    shared_folder = importlib.resources.files('format_hooks') / 'shared_config'
+
+    assert b'\r' not in (shared_folder / 'ruff.toml').read_bytes()
+    assert b'\r' not in (shared_folder / '.clang-format').read_bytes()
+    assert b'\r' not in (shared_folder / '.prettierrc.json').read_bytes()
+    assert b'\r' not in (shared_folder / '.editorconfig').read_bytes()
